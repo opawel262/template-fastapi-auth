@@ -1,0 +1,55 @@
+version: "3.8"
+services:
+  app_fastapi:
+    build:
+      context: .
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./app:/code/app
+    command: >
+      sh -c "python app/main.py"
+    depends_on:
+      - db_fastapi
+      - redis_fastapi
+    env_file:
+      - ./.env
+
+  db_fastapi:
+    image: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - local_pgdata:/var/lib/postgresql/data
+    env_file:
+      - ./.env
+
+  pgadmin_fastapi:
+    image: dpage/pgadmin4
+    restart: always
+    ports:
+      - "8888:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    env_file:
+      - ./.env
+
+  redis_fastapi:
+    image: "redis:alpine"
+    restart: always
+    ports:
+      - "6379:6379"
+
+  redis_commander:
+    image: rediscommander/redis-commander:latest
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis_fastapi:6379
+    depends_on:
+      - redis_fastapi
+
+volumes:
+  local_pgdata:
+  pgadmin-data:
