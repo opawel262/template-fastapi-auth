@@ -5,12 +5,14 @@ from starlette.exceptions import HTTPException
 from app.src.routers.api import router as router_api
 from app.src.core.database import engine, SessionLocal, Base
 from app.src.core.config import API_PREFIX, ALLOWED_HOSTS
+from fastapi_pagination import add_pagination
 
 def get_app() -> FastAPI:
     ''' Configure and run FastAPI app'''
     
     app = FastAPI()
-    
+    add_pagination(app)
+
     ## Generate database tables
     Base.metadata.create_all(bind=engine)
     
