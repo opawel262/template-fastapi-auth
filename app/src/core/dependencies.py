@@ -6,7 +6,7 @@ def get_db(request: Request):
     return request.state.db
 
 def get_current_user(
-    access_token: Optional[str] = Cookie(None)) -> dict:
+    access_token: Optional[str] = Cookie(None)) -> str:
     """
     Get the current user by using the access token from cookies.
     
@@ -28,14 +28,6 @@ def get_current_user(
     
     # Function to retrieve user from token (pseudo-code)
     payload = verify_token(access_token)
-    if payload:
-        print(payload)
         
-    
-    # if not user:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_401_UNAUTHORIZED,
-    #         detail="Invalid or expired access token."
-    #     )
-    
-    # return user
+    user_id = payload.get('user_id')
+    return user_id

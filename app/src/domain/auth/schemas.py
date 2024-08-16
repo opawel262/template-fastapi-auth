@@ -7,3 +7,6 @@ class Token(BaseModel):
 class CreateToken(BaseModel):
     email: EmailStr
     password: str
+    
+class AccessToken(BaseModel):
+    access_token: str

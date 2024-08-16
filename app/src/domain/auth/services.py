@@ -8,7 +8,7 @@ from datetime import timedelta, datetime, timezone
 from typing import Union, Literal
 import jwt
     
-async def get_token(data: schemas.Token, db: Session) -> dict:
+async def get_tokens(data: schemas.Token, db: Session) -> dict:
     user = authenticate_user(db=db, email=data.email, password=data.password)
     if not user:
         raise HTTPException(
@@ -23,6 +23,13 @@ async def get_token(data: schemas.Token, db: Session) -> dict:
     refresh_token = create_token(token_type='refresh', data={'user_id': str(user.id)}, expires_delta=REFRESH_TOKEN_EXPIRE_DAYS)
 
     return {'access_token': access_token, 'refresh_token': refresh_token}
+
+async def get_access_token_by_refresh_token(refresh_token: str) -> str:
+    payload = verify_token(token=refresh_token)
+    user_id = payload.get('user_id')
+    access_token = create_token(token_type='access', data={'user_id': str(user_id)}, expires_delta=ACCESS_TOKEN_EXPIRE_MINUTES)
+    print(str(access_token))
+    return access_token
     
 def get_token_payload(token: str) -> Union[dict]:
     # decode jwt token to payload
@@ -35,7 +42,7 @@ def get_token_payload(token: str) -> Union[dict]:
         )
     return payload
 
-def verify_token(token: str) -> Union[dict, None]:
+def verify_token(token: str) -> dict:
     # check out in  app/src/core/security.py function create_token() to see token payload structure
     payload = get_token_payload(token)
     _validate_jti(jti=payload.get('jti'), user_id=payload.get('user_id'), token_type=payload.get('token_type'))
@@ -68,18 +75,8 @@ def _validate_jti(jti: str, user_id: str, token_type: Literal['access', 'refresh
     key = f'user:{user_id}:jti:token_type:{token_type}'
     stored_jti = redis_client.get(key)
     
-    if stored_jti is None:
-        print("Key does not exist in Redis.")
-        
     if stored_jti != jti:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token identifier (jti).",
         )
-
-
-def _remove_jti(user_id: str, token_type: Literal['access', 'refresh']) -> int:
-    """Remove the jti from Redis."""
-    key = f'user:{user_id}:jti_token_type:{token_type}'
-    result = redis_client.delete(key)
-    return result

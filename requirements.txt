@@ -40,5 +40,6 @@ websockets==12.0
 sqlalchemy==2.0.32
 psycopg2-binary==2.9.9
 redis==5.0.8
+fastapi-pagination==0.12.26
 passlib[bcrypt]
 pyjwt
